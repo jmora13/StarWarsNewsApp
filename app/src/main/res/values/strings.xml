@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Phun App</string>
+    <string name="action_call">action_call</string>
+    <string name="action_share">action_share</string>
+</resources>
