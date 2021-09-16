@@ -10,6 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PhunRepository @Inject constructor(private val phunService: PhunService, private val phunDao: PhunDao) {
+    private lateinit var date: String
     //RETURN ALL ITEMS FROM DATABASE
     val phunList: Flow<List<PhunModelItem>> = phunDao.getAllItems()
 
@@ -23,13 +24,11 @@ class PhunRepository @Inject constructor(private val phunService: PhunService, p
     }
 
     //GET RESPONSE OF ITEMS AND ADD TO DATABASE
-    suspend fun getPhunResponse(): Response<PhunModel>?{
-
+    suspend fun getPhunResponse(){
         val response = phunService.getPhunItems()
 
-        for(i in response.body()?.indices!!){
-            insert(response.body()?.get(i)!!)
+        for(i in 0 until (response.body()?.indices?.count() ?: 0)){
+            insert(response.body()?.get(0) ?: break)
         }
-        return response
     }
 }

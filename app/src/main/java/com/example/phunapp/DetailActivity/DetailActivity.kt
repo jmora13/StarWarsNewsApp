@@ -17,6 +17,7 @@ import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.phunapp.PhunModel.PhunModelItem
@@ -24,6 +25,7 @@ import com.example.phunapp.R
 import com.example.phunapp.utilities.Utilities
 import com.example.phunapp.databinding.ActivityDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
 
@@ -31,53 +33,43 @@ import java.util.*
 class DetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailBinding
     private val detailViewModel: DetailViewModel by viewModels()
-    private lateinit var detailItem: PhunModelItem
     private val REQUEST_CALL_PERMISSIONS = 1
+    private lateinit var detailItem: PhunModelItem
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
         binding = ActivityDetailBinding.inflate(layoutInflater)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        var description: TextView? = findViewById(R.id.detail_description)
-        var detailHeadline: TextView? = findViewById(R.id.detail_headline)
-        var detailLocation: TextView? = findViewById(R.id.detail_location)
-        var detailTime: TextView? = findViewById(R.id.detail_time)
-        var header: ImageView? = findViewById(R.id.header)
+        val description: TextView = findViewById(R.id.detail_description)
+        val detailHeadline: TextView = findViewById(R.id.detail_headline)
+        val detailLocation: TextView = findViewById(R.id.detail_location)
+        val detailTime: TextView = findViewById(R.id.detail_time)
+        val header: ImageView = findViewById(R.id.header)
 
 
         //ALLOW UP BUTTON TO RETURN TO MAIN ACTIVITY
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         //GET ID OF ITEM CLICKED FROM MAIN ACTIVITY
         val id = intent.getIntExtra("id", -1)
+        detailViewModel.getPhunItem(id)
+        detailViewModel.detailItem.observe(this){detailItem ->
+            //INIT TEXTVIEWS FROM DATABASE ITEM
+            description.text = detailItem.description
+            detailHeadline.text = detailItem.title
+            detailLocation.text = "${detailItem?.locationline1}, ${detailItem?.locationline2}"
+            detailTime.text = "${Utilities.parseDate(detailItem?.date)} at ${Utilities.parseTime(detailItem?.date)}"
 
-        //RETRIEVE ITEM FROM DATABASE USING ID
-        lifecycleScope.launchWhenCreated {
-            try {
-                detailItem = detailViewModel.getPhunItem(id)
-            } catch (e: IOException) {
-                Log.d("IOEXCEPTION", e.message.toString())
-                return@launchWhenCreated
-            } finally{
-                //INIT TEXTVIEWS FROM DATABASE ITEM
-                description?.text = detailItem.description
-                detailHeadline?.text = detailItem.title
-                detailLocation?.text =
-                    "${detailItem?.locationline1}, ${detailItem?.locationline2}"
-                detailTime?.text = "${Utilities.parseDate(detailItem?.date)} at ${Utilities.parseTime(detailItem?.date)}"
-
-                //SET UP IMAGEVIEW
-                detailItem.apply {
-                    Glide.with(this@DetailActivity)
-                        .load(detailItem?.image)
-                        .placeholder(R.drawable.placeholder_nomoon)
-                        .apply(
-                            RequestOptions().dontTransform()
-                        )
-                        .into(header!!)
-                }
+            //SET UP IMAGEVIEW
+            detailItem.apply {
+                Glide.with(this@DetailActivity)
+                    .load(detailItem.image)
+                    .placeholder(R.drawable.placeholder_nomoon)
+                    .apply(
+                        RequestOptions().dontTransform()
+                    )
+                    .into(header)
             }
-
         }
     }
 

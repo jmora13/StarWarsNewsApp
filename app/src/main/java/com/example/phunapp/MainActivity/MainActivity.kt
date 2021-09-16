@@ -1,18 +1,15 @@
 package com.example.phunapp.MainActivity
 
-import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.Telephony
-import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.viewModelScope
 import com.example.phunapp.R
 import com.example.phunapp.adapters.PhunListAdapter
 import com.example.phunapp.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.*
@@ -30,22 +27,10 @@ class MainActivity : AppCompatActivity() {
         val adapter = PhunListAdapter()
         binding.recyclerView.adapter = adapter
 
+        phunViewModel.getPhunItems()
         //GET LIVEDATA LIST OF ALL ITEMS
         phunViewModel.phunList.observe(this){ phunList ->
             phunList.let{ adapter.submitList(it)}
-        }
-
-        //CALLS VIEWMODEL TO START API REQUEST
-        lifecycleScope.launchWhenCreated {
-            try{
-                phunViewModel.getPhunItems()
-            } catch (e: IOException){
-                Log.d("IOEXCEPTION", e.message.toString())
-                return@launchWhenCreated
-            } catch(e: HttpException){
-                Log.d("HTTPEXCEPTION", e.stackTrace.toString())
-                return@launchWhenCreated
-            }
         }
     }
 }
